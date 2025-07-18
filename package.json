@@ -9,7 +9,7 @@
   ],
   "homepage": "https://github.com/GataNina-Li/Baileys",
   "repository": {
-    "url": "git+ssh://git@github.com/GataNina-Li/Baileys.git"
+    "url": "https://github.com/GataNina-Li/Baileys.git"
   },
   "license": "MIT",
   "author": "Gata Dios",
@@ -48,16 +48,14 @@
     "axios": "^1.6.0",
     "cache-manager": "^5.7.6",
     "libphonenumber-js": "^1.10.20",
-    "libsignal": "github:nstar-y/libsignal",
     "lodash": "^4.17.21",
     "music-metadata": "^7.12.3",
-    "pino": "^9.6",
+    "pino": "^9.6.0",
     "protobufjs": "^6.11.3",
     "uuid": "^10.0.0",
     "ws": "^8.13.0"
   },
   "devDependencies": {
-    "@adiwajshing/eslint-config": "github:adiwajshing/eslint-config",
     "@types/got": "^9.6.11",
     "@types/jest": "^27.5.1",
     "@types/node": "^16.0.0",
