@@ -113,3 +113,12 @@ export const DEFAULT_CACHE_TTLS = {
 	CALL_OFFER: 5 * 60, // 5 minutes
 	USER_DEVICES: 5 * 60 // 5 minutes
 }
+
+// Mobile registration constants
+export const MOBILE_REGISTRATION_ENDPOINT = 'https://v.whatsapp.net/v2/register'
+export const MOBILE_TOKEN = 'PdA2DJyKoUrwLw1Bg6EIhzh502dF9noR9uFCllGk'
+export const MOBILE_USERAGENT = 'WhatsApp/2.23.24.76 A'
+export const REGISTRATION_PUBLIC_KEY = 'BbYKNfSF99vx-IVdGNKiM9cG6P6psOjVwm29S-XRJDM='
+
+// Registration endpoint
+export const MOBILE_REGISTRATION_URL = MOBILE_REGISTRATION_ENDPOINT
