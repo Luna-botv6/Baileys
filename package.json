@@ -1,5 +1,6 @@
 {
   "name": "baileys-mod",
+  "type": "module",
   "version": "6.8.4",
   "description": "Custom Baileys WhatsApp API",
   "keywords": [
@@ -53,7 +54,8 @@
     "pino": "^9.6.0",
     "protobufjs": "^6.11.3",
     "uuid": "^10.0.0",
-    "ws": "^8.13.0"
+    "ws": "^8.13.0",
+    "libsignal": "git+https://github.com/whiskeysockets/libsignal-node"
   },
   "devDependencies": {
     "@types/got": "^9.6.11",
@@ -100,5 +102,8 @@
       "optional": true
     }
   },
-  "packageManager": "yarn@1.22.19"
+  "packageManager": "yarn@1.22.19",
+  "engines": {
+    "node": ">=16.0.0"
+  }
 }
