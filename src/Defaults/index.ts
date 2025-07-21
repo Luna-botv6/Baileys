@@ -1,48 +1,30 @@
-import { createHash } from 'crypto'
-import { proto } from '../../WAProto'
+import { proto } from '../../WAProto/index.js'
 import { makeLibSignalRepository } from '../Signal/libsignal'
 import type { AuthenticationState, MediaType, SocketConfig, WAVersion } from '../Types'
 import { Browsers } from '../Utils'
 import logger from '../Utils/logger'
-import { version } from './baileys-version.json'
-import phoneNumberMCC from './phonenumber-mcc.json'
+import defaultVersion from './baileys-version.json' assert { type: 'json' }
+
+const { version } = defaultVersion
 
 export const UNAUTHORIZED_CODES = [401, 403, 419]
 
-export const PHONENUMBER_MCC = phoneNumberMCC
-
 export const DEFAULT_ORIGIN = 'https://web.whatsapp.com'
-export const MOBILE_ENDPOINT = 'g.whatsapp.net'
-export const MOBILE_PORT = 443
 export const DEF_CALLBACK_PREFIX = 'CB:'
 export const DEF_TAG_PREFIX = 'TAG:'
 export const PHONE_CONNECTION_CB = 'CB:Pong'
 
 export const WA_DEFAULT_EPHEMERAL = 7 * 24 * 60 * 60
 
-const WA_VERSION = '2.24.6.77'
-
-const WA_VERSION_HASH = createHash('md5').update(WA_VERSION).digest('hex')
-export const MOBILE_TOKEN = Buffer.from('0a1mLfGUIBVrMKF1RdvLI5lkRBvof6vn0fD2QRSM' + WA_VERSION_HASH)
-export const MOBILE_REGISTRATION_ENDPOINT = 'https://v.whatsapp.net/v2'
-export const MOBILE_USERAGENT = `WhatsApp/${WA_VERSION} iOS/15.3.1 Device/Apple-iPhone_7`
-export const REGISTRATION_PUBLIC_KEY = Buffer.from([
-	5, 142, 140, 15, 116, 195, 235, 197, 215, 166, 134, 92, 108, 60, 132, 56, 86, 176, 97, 33, 204, 232, 234, 119, 77,
-	34, 251, 111, 18, 37, 18, 48, 45,
-])
 export const NOISE_MODE = 'Noise_XX_25519_AESGCM_SHA256\0\0\0\0'
-export const DICT_VERSION = 2
+export const DICT_VERSION = 3
 export const KEY_BUNDLE_TYPE = Buffer.from([5])
-export const NOISE_WA_HEADER = Buffer.from(
-	[ 87, 65, 6, DICT_VERSION ]
-) // last is "DICT_VERSION"
-export const PROTOCOL_VERSION = [5, 2]
-export const MOBILE_NOISE_HEADER = Buffer.concat([Buffer.from('WA'), Buffer.from(PROTOCOL_VERSION)])
+export const NOISE_WA_HEADER = Buffer.from([87, 65, 6, DICT_VERSION]) // last is "DICT_VERSION"
 /** from: https://stackoverflow.com/questions/3809401/what-is-a-good-regular-expression-to-match-a-url */
 export const URL_REGEX = /https:\/\/(?![^:@\/\s]+:[^:@\/\s]+@)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?/g
 
 export const WA_CERT_DETAILS = {
-	SERIAL: 0,
+	SERIAL: 0
 }
 
 export const PROCESSABLE_HISTORY_TYPES = [
@@ -50,7 +32,7 @@ export const PROCESSABLE_HISTORY_TYPES = [
 	proto.Message.HistorySyncNotification.HistorySyncType.PUSH_NAME,
 	proto.Message.HistorySyncNotification.HistorySyncType.RECENT,
 	proto.Message.HistorySyncNotification.HistorySyncType.FULL,
-	proto.Message.HistorySyncNotification.HistorySyncType.ON_DEMAND,
+	proto.Message.HistorySyncNotification.HistorySyncType.ON_DEMAND
 ]
 
 export const DEFAULT_CONNECTION_CONFIG: SocketConfig = {
@@ -60,7 +42,6 @@ export const DEFAULT_CONNECTION_CONFIG: SocketConfig = {
 	connectTimeoutMs: 20_000,
 	keepAliveIntervalMs: 30_000,
 	logger: logger.child({ class: 'baileys' }),
-	printQRInTerminal: false,
 	emitOwnEvents: true,
 	defaultQueryTimeoutMs: 60_000,
 	customUploadHosts: [],
@@ -76,14 +57,14 @@ export const DEFAULT_CONNECTION_CONFIG: SocketConfig = {
 	linkPreviewImageThumbnailWidth: 192,
 	transactionOpts: { maxCommitRetries: 10, delayBetweenTriesMs: 3000 },
 	generateHighQualityLinkPreview: false,
-	options: { },
+	options: {},
 	appStateMacVerification: {
 		patch: false,
-		snapshot: false,
+		snapshot: false
 	},
 	countryCode: 'US',
-	getMessage: async() => undefined,
-	cachedGroupMetadata: async() => undefined,
+	getMessage: async () => undefined,
+	cachedGroupMetadata: async () => undefined,
 	makeSignalRepository: makeLibSignalRepository
 }
 
@@ -96,19 +77,19 @@ export const MEDIA_PATH_MAP: { [T in MediaType]?: string } = {
 	'thumbnail-link': '/mms/image',
 	'product-catalog-image': '/product/image',
 	'md-app-state': '',
-	'md-msg-hist': '/mms/md-app-state',
+	'md-msg-hist': '/mms/md-app-state'
 }
 
 export const MEDIA_HKDF_KEY_MAPPING = {
-	'audio': 'Audio',
-	'document': 'Document',
-	'gif': 'Video',
-	'image': 'Image',
-	'ppic': '',
-	'product': 'Image',
-	'ptt': 'Audio',
-	'sticker': 'Image',
-	'video': 'Video',
+	audio: 'Audio',
+	document: 'Document',
+	gif: 'Video',
+	image: 'Image',
+	ppic: '',
+	product: 'Image',
+	ptt: 'Audio',
+	sticker: 'Image',
+	video: 'Video',
 	'thumbnail-document': 'Document Thumbnail',
 	'thumbnail-image': 'Image Thumbnail',
 	'thumbnail-video': 'Video Thumbnail',
@@ -117,7 +98,7 @@ export const MEDIA_HKDF_KEY_MAPPING = {
 	'md-app-state': 'App State',
 	'product-catalog-image': '',
 	'payment-bg-image': 'Payment Background',
-	'ptv': 'Video'
+	ptv: 'Video'
 }
 
 export const MEDIA_KEYS = Object.keys(MEDIA_PATH_MAP) as MediaType[]
@@ -130,5 +111,5 @@ export const DEFAULT_CACHE_TTLS = {
 	SIGNAL_STORE: 5 * 60, // 5 minutes
 	MSG_RETRY: 60 * 60, // 1 hour
 	CALL_OFFER: 5 * 60, // 5 minutes
-	USER_DEVICES: 5 * 60, // 5 minutes
+	USER_DEVICES: 5 * 60 // 5 minutes
 }

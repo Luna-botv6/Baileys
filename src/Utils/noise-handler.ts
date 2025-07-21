@@ -1,10 +1,11 @@
 import { Boom } from '@hapi/boom'
-import { ILogger } from './logger'
-import { proto } from '../../WAProto'
+import { proto } from '../../WAProto/index.js'
 import { NOISE_MODE, WA_CERT_DETAILS } from '../Defaults'
-import { KeyPair } from '../Types'
-import { BinaryNode, decodeBinaryNode } from '../WABinary'
+import type { KeyPair } from '../Types'
+import type { BinaryNode } from '../WABinary'
+import { decodeBinaryNode } from '../WABinary'
 import { aesDecryptGCM, aesEncryptGCM, Curve, hkdf, sha256 } from './crypto'
+import type { ILogger } from './logger'
 
 const generateIV = (counter: number) => {
 	const iv = new ArrayBuffer(12)
@@ -16,20 +17,18 @@ const generateIV = (counter: number) => {
 export const makeNoiseHandler = ({
 	keyPair: { private: privateKey, public: publicKey },
 	NOISE_HEADER,
-	mobile,
 	logger,
 	routingInfo
 }: {
 	keyPair: KeyPair
 	NOISE_HEADER: Uint8Array
-	mobile: boolean
 	logger: ILogger
 	routingInfo?: Buffer | undefined
 }) => {
 	logger = logger.child({ class: 'ns' })
 
 	const authenticate = (data: Uint8Array) => {
-		if(!isFinished) {
+		if (!isFinished) {
 			hash = sha256(Buffer.concat([hash, data]))
 		}
 	}
@@ -49,7 +48,7 @@ export const makeNoiseHandler = ({
 		const iv = generateIV(isFinished ? readCounter : writeCounter)
 		const result = aesDecryptGCM(ciphertext, decKey, iv, hash)
 
-		if(isFinished) {
+		if (isFinished) {
 			readCounter += 1
 		} else {
 			writeCounter += 1
@@ -59,24 +58,24 @@ export const makeNoiseHandler = ({
 		return result
 	}
 
-	const localHKDF = async(data: Uint8Array) => {
+	const localHKDF = async (data: Uint8Array) => {
 		const key = await hkdf(Buffer.from(data), 64, { salt, info: '' })
 		return [key.slice(0, 32), key.slice(32)]
 	}
 
-	const mixIntoKey = async(data: Uint8Array) => {
+	const mixIntoKey = async (data: Uint8Array) => {
 		const [write, read] = await localHKDF(data)
-		salt = write
-		encKey = read
-		decKey = read
+		salt = write!
+		encKey = read!
+		decKey = read!
 		readCounter = 0
 		writeCounter = 0
 	}
 
-	const finishInit = async() => {
+	const finishInit = async () => {
 		const [write, read] = await localHKDF(new Uint8Array(0))
-		encKey = write
-		decKey = read
+		encKey = write!
+		decKey = read!
 		hash = Buffer.from([])
 		readCounter = 0
 		writeCounter = 0
@@ -104,7 +103,7 @@ export const makeNoiseHandler = ({
 		authenticate,
 		mixIntoKey,
 		finishInit,
-		processHandshake: async({ serverHello }: proto.HandshakeMessage, noiseKey: KeyPair) => {
+		processHandshake: async ({ serverHello }: proto.HandshakeMessage, noiseKey: KeyPair) => {
 			authenticate(serverHello!.ephemeral!)
 			await mixIntoKey(Curve.sharedKey(privateKey, serverHello!.ephemeral!))
 
@@ -113,16 +112,12 @@ export const makeNoiseHandler = ({
 
 			const certDecoded = decrypt(serverHello!.payload!)
 
-			if(mobile) {
-				proto.CertChain.NoiseCertificate.decode(certDecoded)
-			} else {
-				const { intermediate: certIntermediate } = proto.CertChain.decode(certDecoded)
+			const { intermediate: certIntermediate } = proto.CertChain.decode(certDecoded)
 
-				const { issuerSerial } = proto.CertChain.NoiseCertificate.Details.decode(certIntermediate!.details!)
+			const { issuerSerial } = proto.CertChain.NoiseCertificate.Details.decode(certIntermediate!.details!)
 
-				if(issuerSerial !== WA_CERT_DETAILS.SERIAL) {
-					throw new Boom('certification match failed', { statusCode: 400 })
-				}
+			if (issuerSerial !== WA_CERT_DETAILS.SERIAL) {
+				throw new Boom('certification match failed', { statusCode: 400 })
 			}
 
 			const keyEnc = encrypt(noiseKey.public)
@@ -131,13 +126,13 @@ export const makeNoiseHandler = ({
 			return keyEnc
 		},
 		encodeFrame: (data: Buffer | Uint8Array) => {
-			if(isFinished) {
+			if (isFinished) {
 				data = encrypt(data)
 			}
 
 			let header: Buffer
 
-			if(routingInfo) {
+			if (routingInfo) {
 				header = Buffer.alloc(7)
 				header.write('ED', 0, 'utf8')
 				header.writeUint8(0, 2)
@@ -152,7 +147,7 @@ export const makeNoiseHandler = ({
 			const introSize = sentIntro ? 0 : header.length
 			const frame = Buffer.alloc(introSize + 3 + data.byteLength)
 
-			if(!sentIntro) {
+			if (!sentIntro) {
 				frame.set(header)
 				sentIntro = true
 			}
@@ -163,31 +158,31 @@ export const makeNoiseHandler = ({
 
 			return frame
 		},
-		decodeFrame: async(newData: Buffer | Uint8Array, onFrame: (buff: Uint8Array | BinaryNode) => void) => {
+		decodeFrame: async (newData: Buffer | Uint8Array, onFrame: (buff: Uint8Array | BinaryNode) => void) => {
 			// the binary protocol uses its own framing mechanism
 			// on top of the WS frames
 			// so we get this data and separate out the frames
 			const getBytesSize = () => {
-				if(inBytes.length >= 3) {
+				if (inBytes.length >= 3) {
 					return (inBytes.readUInt8() << 16) | inBytes.readUInt16BE(1)
 				}
 			}
 
-			inBytes = Buffer.concat([ inBytes, newData ])
+			inBytes = Buffer.concat([inBytes, newData])
 
 			logger.trace(`recv ${newData.length} bytes, total recv ${inBytes.length} bytes`)
 
 			let size = getBytesSize()
-			while(size && inBytes.length >= size + 3) {
+			while (size && inBytes.length >= size + 3) {
 				let frame: Uint8Array | BinaryNode = inBytes.slice(3, size + 3)
 				inBytes = inBytes.slice(size + 3)
 
-				if(isFinished) {
-					const result = decrypt(frame as Uint8Array)
+				if (isFinished) {
+					const result = decrypt(frame)
 					frame = await decodeBinaryNode(result)
 				}
 
-				logger.trace({ msg: (frame as any)?.attrs?.id }, 'recv frame')
+				logger.trace({ msg: (frame as BinaryNode)?.attrs?.id }, 'recv frame')
 
 				onFrame(frame)
 				size = getBytesSize()
